@@ -182,13 +182,13 @@ VkFormat PipelineCompiler::GetVertexFormat(uint8 format)
 	switch (format)
 	{
 	case FMT_32_32_32_32_FLOAT:
-		return VK_FORMAT_R32G32B32A32_UINTVK_FORMAT_R32G32B32A32_SFLOAT
+		return VK_FORMAT_R32G32B32A32_SFLOAT;
 	case FMT_32_32_32_FLOAT:
-		return VK_FORMAT_R32G32B32_UINTVK_FORMAT_R32G32B32_SFLOAT
+		return VK_FORMAT_R32G32B32_SFLOAT;
 	case FMT_32_32_FLOAT:
-		return VK_FORMAT_R32G32_UINTVK_FORMAT_R32G32_SFLOAT
+		return VK_FORMAT_R32G32_SFLOAT;
 	case FMT_32_FLOAT:
-		return VK_FORMAT_R32_UINTVK_FORMAT_R32_SFLOAT
+		return VK_FORMAT_R32_SFLOAT;
 	case FMT_8_8_8_8:
 		return VK_FORMAT_R8G8B8A8_UINT;
 	case FMT_8_8_8:
@@ -214,13 +214,13 @@ VkFormat PipelineCompiler::GetVertexFormat(uint8 format)
 	case FMT_16:
 		return VK_FORMAT_R16_UINT;
 	case FMT_16_16_16_16_FLOAT:
-		return VK_FORMAT_R16G16B16A16_UINTVK_FORMAT_R16G16B16A16_SFLOAT // verified to match OpenGL
+		return VK_FORMAT_R16G16B16A16_SFLOAT; // verified to match OpenGL
 	case FMT_16_16_16_FLOAT:
-		return VK_FORMAT_R16G16B16_UINTVK_FORMAT_R16G16B16_SFLOAT
+		return VK_FORMAT_R16G16B16_SFLOAT;
 	case FMT_16_16_FLOAT:
-		return VK_FORMAT_R16G16_UINTVK_FORMAT_R16G16_SFLOAT
+		return VK_FORMAT_R16G16_SFLOAT;
 	case FMT_16_FLOAT:
-		return VK_FORMAT_R16_UINTVK_FORMAT_R16_SFLOAT
+		return VK_FORMAT_R16_SFLOAT;
 	case FMT_2_10_10_10:
 		return VK_FORMAT_R32_UINT; // verified to match OpenGL
 	default:
@@ -564,7 +564,7 @@ void PipelineCompiler::InitRasterizerState(const LatteContextRegister& latteRegi
 		rasterizer.rasterizerDiscardEnable = false;
 
 	rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-	if (vkRenderer->m_featureControl.deviceExtensions.nv_fill_rectangle && isPrimitiveRect && vkRenderer->m_deviceProperties.vendorID != 0x5143)
+		if (vkRenderer->m_featureControl.deviceExtensions.nv_fill_rectangle && isPrimitiveRect && vkRenderer->GetVendorID() != 0x5143)
 		rasterizer.polygonMode = VK_POLYGON_MODE_FILL_RECTANGLE_NV;
 
 	rasterizer.depthClampEnable = VK_TRUE; // depth clamping is always enabled
@@ -946,15 +946,15 @@ bool PipelineCompiler::InitFromCurrentGPUState(PipelineInfo* pipelineInfo, const
 bool PipelineCompiler::Compile(bool forceCompile, bool isRenderThread, bool showInOverlay)
 {
 	VulkanRenderer* vkRenderer = VulkanRenderer::GetInstance();
- // PowerVR compatibility check
- bool isPowerVR = vkRenderer->m_deviceProperties.vendorID == 0x5143;
- if (isPowerVR)
- {
-	 cemuLog_logDebug(LogType::Force, "PowerVR GPU detected - Applying compatibility tweaks");
- }
-	bool isPowerVR = vkRenderer->m_deviceProperties.vendorID == 0x5143;
+	
+	// PowerVR compatibility check
+	bool isPowerVR = vkRenderer->GetVendorID() == 0x5143;  // Use appropriate getter method
+	if (isPowerVR)
+	{
+		cemuLog_logDebug(LogType::Force, "PowerVR GPU detected - Applying compatibility tweaks");
+	}
+	
 	if (!vkRenderer->m_featureControl.deviceExtensions.pipeline_creation_cache_control || isPowerVR)
-
 	if (!forceCompile)
 	{
 		// fail early if some shader stages are not compiled
