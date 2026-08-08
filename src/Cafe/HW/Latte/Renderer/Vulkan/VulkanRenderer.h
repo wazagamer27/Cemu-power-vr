@@ -227,7 +227,7 @@ public:
 	VkInstance GetVkInstance() const { return m_instance; }
 	VkDevice GetLogicalDevice() const { return m_logicalDevice; }
 	VkPhysicalDevice GetPhysicalDevice() const { return m_physicalDevice; }
-
+    uint32 GetVendorID() const { return m_deviceProperties.vendorID; }
 	VkDescriptorPool GetDescriptorPool() const { return m_descriptorPool; }
 
 	void WaitDeviceIdle() const { vkDeviceWaitIdle(m_logicalDevice); }
