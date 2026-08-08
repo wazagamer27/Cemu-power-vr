@@ -1852,8 +1852,9 @@ void VulkanRenderer::ImguiInit()
 		vkDestroyRenderPass(GetLogicalDevice(), prevRenderPass, nullptr);
 }
 
-void VulkanRenderer::Initialize()vkGetPhysicalDeviceProperties(m_physicalDevice, &m_deviceProperties);
+void VulkanRenderer::Initialize()
 {
+	vkGetPhysicalDeviceProperties(m_physicalDevice, &m_deviceProperties);
 	Renderer::Initialize();
 	InitFirstCommandBuffer();
 	CreatePipelineCache();
