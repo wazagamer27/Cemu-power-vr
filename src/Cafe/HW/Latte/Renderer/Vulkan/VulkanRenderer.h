@@ -599,7 +599,7 @@ private:
 	void occlusionQuery_notifyEndCommandBuffer();
 	void occlusionQuery_notifyBeginCommandBuffer();
 
-private:
+    private:
 	std::vector<const char*> m_layerNames;
 	VkInstance m_instance = VK_NULL_HANDLE;
 	VkPhysicalDevice m_physicalDevice = VK_NULL_HANDLE;
@@ -607,8 +607,10 @@ private:
 	VkDebugUtilsMessengerEXT m_debugCallback = nullptr;
 	volatile bool m_destructionRequested = false;
 
-	QueueFamilyIndices m_indices{};
+	// ✅ AGREGÁ ESTO:
+	VkPhysicalDeviceProperties m_deviceProperties{};
 
+	QueueFamilyIndices m_indices{};
 	Semaphore m_pipeline_cache_semaphore;
 	std::shared_mutex m_pipeline_cache_save_mutex;
 	std::thread m_pipeline_cache_save_thread;
