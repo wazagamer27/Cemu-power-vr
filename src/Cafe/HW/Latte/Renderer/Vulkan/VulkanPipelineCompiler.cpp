@@ -1042,7 +1042,7 @@ bool PipelineCompiler::Compile(bool forceCompile, bool isRenderThread, bool show
 		std::shared_lock lock(vkRenderer->m_pipeline_cache_save_mutex);
 		result = vkCreateGraphicsPipelines(vkRenderer->m_logicalDevice, vkRenderer->m_pipeline_cache, 1, &pipelineInfo, nullptr, &pipeline);
 		lock.unlock();
-		vkQueueWaitIdle(vkRenderer->m_logicalDevice);
+		vkDeviceWaitIdle(vkRenderer->m_logicalDevice);
 			break;
 		retryCount++;
 	}
