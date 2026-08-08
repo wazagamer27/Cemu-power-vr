@@ -564,7 +564,7 @@ void PipelineCompiler::InitRasterizerState(const LatteContextRegister& latteRegi
 		rasterizer.rasterizerDiscardEnable = false;
 
 	rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-           if (vkRenderer->m_featureControl.deviceExtensions.nv_fill_rectangle && isPrimitiveRect)
+           if (vkRenderer->m_featureControl.deviceExtensions.nv_fill_rectangle && !isPowerVR &&  isPrimitiveRect)
     rasterizer.polygonMode = VK_POLYGON_MODE_FILL_RECTANGLE_NV;
 	rasterizer.depthClampEnable = VK_TRUE; // depth clamping is always enabled
 
