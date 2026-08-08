@@ -1,0 +1,34 @@
+name: Compilar Cemu Dual Screen PowerVR Fix
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Configurar Java 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Instalar Android SDK y NDK
+      uses: android-actions/setup-android@v3
+
+    - name: Compilar APK Final
+      run: |
+        cd src/android
+        chmod +x gradlew
+        ./gradlew assembleRelease --no-daemon --stacktrace -Pandroid.skipSign=true
+
+    - name: Subir APK Terminada
+      uses: actions/upload-artifact@v4
+      with:
+        name: Cemu-DualScreen-PowerVRFix
+        path: src/android/app/build/outputs/apk/release/*.apk
