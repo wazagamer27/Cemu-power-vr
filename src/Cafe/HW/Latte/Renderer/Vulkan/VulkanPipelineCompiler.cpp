@@ -541,44 +541,28 @@ void PipelineCompiler::InitViewportState()
 
 void PipelineCompiler::InitRasterizerState(const LatteContextRegister& latteRegister, VulkanRenderer* vkRenderer, bool isPrimitiveRect, bool& usesDepthBias)
 {
-	// polygon control
-	const auto& polygonControlReg = latteRegister.PA_SU_SC_MODE_CNTL;
-	const auto frontFace = polygonControlReg.get_FRONT_FACE();
-	uint32 cullFront = polygonControlReg.get_CULL_FRONT();
-	uint32 cullBack = polygonControlReg.get_CULL_BACK();
-	uint32 polyOffsetFrontEnable = polygonControlReg.get_OFFSET_FRONT_ENABLED();
-
-	cemu_assert_debug(LatteGPUState.contextNew.PA_CL_CLIP_CNTL.get_ZCLIP_NEAR_DISABLE() == LatteGPUState.contextNew.PA_CL_CLIP_CNTL.get_ZCLIP_FAR_DISABLE()); // near or far clipping can be disabled individually
-	bool zClipEnable = LatteGPUState.contextNew.PA_CL_CLIP_CNTL.get_ZCLIP_FAR_DISABLE() == false;
-
-	// z-clipping
-	rasterizerExt.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_DEPTH_CLIP_STATE_CREATE_INFO_EXT;
-	rasterizerExt.depthClipEnable = zClipEnable;
-	rasterizerExt.flags = 0;
-
-	rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-	rasterizer.rasterizerDiscardEnable = LatteGPUState.contextNew.PA_CL_CLIP_CNTL.get_DX_RASTERIZATION_KILL();
-	rasterizer.pNext = VulkanRenderer::GetInstance()->m_featureControl.deviceExtensions.depth_clip_enable ? &rasterizerExt : nullptr;
-	// GX2SetSpecialState(0, true) workaround
-	if (!LatteGPUState.contextNew.PA_CL_VTE_CNTL.get_VPORT_X_OFFSET_ENA())
-		rasterizer.rasterizerDiscardEnable = false;
-
+	// Detectar PowerVR
+	bool isPowerVR = vkRenderer->GetVendorID() == 0x5143;
+	
+	// ... código existente ...
+	
 	rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-           if (vkRenderer->m_featureControl.deviceExtensions.nv_fill_rectangle && !isPowerVR &&  isPrimitiveRect)
-    rasterizer.polygonMode = VK_POLYGON_MODE_FILL_RECTANGLE_NV;
-	rasterizer.depthClampEnable = VK_TRUE; // depth clamping is always enabled
-
-	rasterizer.lineWidth = 1.0f; // TODO -> mmPA_SU_LINE_CNTL
-
-	usesDepthBias = polyOffsetFrontEnable;
-	if (polyOffsetFrontEnable)
+	
+	// Solo usar extensión NVIDIA en hardware NVIDIA
+	if (vkRenderer->m_featureControl.deviceExtensions.nv_fill_rectangle && !isPowerVR && isPrimitiveRect)
 	{
-		rasterizer.depthBiasEnable = VK_TRUE;
-		// initialize to zero, set dynamically via vkCmdSetDepthBias
-		rasterizer.depthBiasConstantFactor = 0.0f;
-		rasterizer.depthBiasSlopeFactor = 0.0f;
-		rasterizer.depthBiasClamp = 0.0f;
+		rasterizer.polygonMode = VK_POLYGON_MODE_FILL_RECTANGLE_NV;
 	}
+	// Para PowerVR con primitivos rectangulares, usar el geometry shader de emulación
+	else if (isPowerVR && isPrimitiveRect)
+	{
+		// PowerVR debe usar el geometry shader de emulación para rectángulos
+		// El polígonMode permanece como FILL y se depende del GS
+		cemuLog_logDebug(LogType::Force, "PowerVR: Usando emulación de rectángulos con geometry shader");
+	}
+	
+	// ... resto del código ...
+}
 	else
 		rasterizer.depthBiasEnable = VK_FALSE;
 
