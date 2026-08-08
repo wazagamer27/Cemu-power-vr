@@ -1,4 +1,4 @@
-name: Compilar Cemu PowerVR Fix
+name: Compilar Cemu PowerVR 
 on:
   push:
     branches: [ main, master ]
@@ -30,5 +30,5 @@ jobs:
     - name: Subir APK Terminada
       uses: actions/upload-artifact@v4
       with:
-        name: Cemu-PowerVRFix
+        name: Cemu-PowerVR
         path: src/android/app/build/outputs/apk/release/*.apk
