@@ -196,6 +196,10 @@ void VulkanRenderer::DetermineVendor()
 		properties.pNext = &driverProperties;
 
 	vkGetPhysicalDeviceProperties2(m_physicalDevice, &properties);
+	
+	// 👇 ESTA ES LA LÍNEA QUE AGREGÁS (Paso 2)
+	m_deviceProperties = properties.properties;
+	
 	switch (properties.properties.vendorID)
 	{
 	case 0x10DE:
@@ -214,6 +218,11 @@ void VulkanRenderer::DetermineVendor()
 
 	VkDriverId driverId = driverProperties.driverID;
 
+	if(driverId == VK_DRIVER_ID_MESA_RADV || driverId == VK_DRIVER_ID_INTEL_OPEN_SOURCE_MESA)
+		m_vendor = GfxVendor::Mesa;
+
+	cemuLog_log(LogType::Force, "Using GPU: {}", properties.properties.deviceName);
+	// ... resto del código
 	if(driverId == VK_DRIVER_ID_MESA_RADV || driverId == VK_DRIVER_ID_INTEL_OPEN_SOURCE_MESA)
 		m_vendor = GfxVendor::Mesa;
 
