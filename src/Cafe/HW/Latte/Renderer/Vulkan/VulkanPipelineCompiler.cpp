@@ -564,9 +564,8 @@ void PipelineCompiler::InitRasterizerState(const LatteContextRegister& latteRegi
 		rasterizer.rasterizerDiscardEnable = false;
 
 	rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-		if (vkRenderer->m_featureControl.deviceExtensions.nv_fill_rectangle && isPrimitiveRect && vkRenderer->GetVendorID() != 0x5143)
-		rasterizer.polygonMode = VK_POLYGON_MODE_FILL_RECTANGLE_NV;
-
+           if (vkRenderer->m_featureControl.deviceExtensions.nv_fill_rectangle && isPrimitiveRect)
+    rasterizer.polygonMode = VK_POLYGON_MODE_FILL_RECTANGLE_NV;
 	rasterizer.depthClampEnable = VK_TRUE; // depth clamping is always enabled
 
 	rasterizer.lineWidth = 1.0f; // TODO -> mmPA_SU_LINE_CNTL
@@ -948,13 +947,17 @@ bool PipelineCompiler::Compile(bool forceCompile, bool isRenderThread, bool show
 	VulkanRenderer* vkRenderer = VulkanRenderer::GetInstance();
 	
 	// PowerVR compatibility check
-	bool isPowerVR = vkRenderer->GetVendorID() == 0x5143;  // Use appropriate getter method
-	if (isPowerVR)
-	{
-		cemuLog_logDebug(LogType::Force, "PowerVR GPU detected - Applying compatibility tweaks");
-	}
-	
-	if (!vkRenderer->m_featureControl.deviceExtensions.pipeline_creation_cache_control || isPowerVR)
+	bool isPowerVR = vkRenderer->GetVendorID() == 0x5143;
+if (isPowerVR)
+{
+    cemuLog_logDebug(LogType::Force, "PowerVR GPU detected - Applying compatibility tweaks");
+}
+
+// NO excluyas PowerVR de pipeline_creation_cache_control
+if (!vkRenderer->m_featureControl.deviceExtensions.pipeline_creation_cache_control)
+{
+    // handle cuando NO hay caché disponible
+}
 	if (!forceCompile)
 	{
 		// fail early if some shader stages are not compiled
