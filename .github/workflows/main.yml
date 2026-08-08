@@ -8,18 +8,18 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v4 # Revisa si hay una version estable v5 
       with:
         submodules: recursive
 
     - name: Configurar Java 17
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v5 
       with:
         distribution: 'temurin'
         java-version: '17'
 
     - name: Instalar Android SDK y NDK
-      uses: android-actions/setup-android@v3
+      uses: android-actions/setup-android@v3 # verifica en su repositorio si hay una version mas nueva
 
     - name: Compilar APK Final
       run: |
