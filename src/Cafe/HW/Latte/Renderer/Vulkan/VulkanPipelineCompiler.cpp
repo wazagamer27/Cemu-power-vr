@@ -541,28 +541,19 @@ void PipelineCompiler::InitViewportState()
 
 void PipelineCompiler::InitRasterizerState(const LatteContextRegister& latteRegister, VulkanRenderer* vkRenderer, bool isPrimitiveRect, bool& usesDepthBias)
 {
-	// Detectar PowerVR
+	// polygon control
+	const auto& polygonControlReg = latteRegister.PA_SU_SC_MODE_CNTL;
+	const auto frontFace = polygonControlReg.get_FRONT_FACE();
+	uint32 cullFront = polygonControlReg.get_CULL_FRONT();
+	uint32 cullBack = polygonControlReg.get_CULL_BACK();
+	uint32 polyOffsetFrontEnable = polygonControlReg.get_OFFSET_FRONT_ENABLED();
+
+	// AÑADE ESTAS 2 LÍNEAS AQUÍ:
 	bool isPowerVR = vkRenderer->GetVendorID() == 0x5143;
-	
-	// ... código existente ...
-	
-	rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-	
-	// Solo usar extensión NVIDIA en hardware NVIDIA
-	if (vkRenderer->m_featureControl.deviceExtensions.nv_fill_rectangle && !isPowerVR && isPrimitiveRect)
-	{
-		rasterizer.polygonMode = VK_POLYGON_MODE_FILL_RECTANGLE_NV;
-	}
-	// Para PowerVR con primitivos rectangulares, usar el geometry shader de emulación
-	else if (isPowerVR && isPrimitiveRect)
-	{
-		// PowerVR debe usar el geometry shader de emulación para rectángulos
-		// El polígonMode permanece como FILL y se depende del GS
-		cemuLog_logDebug(LogType::Force, "PowerVR: Usando emulación de rectángulos con geometry shader");
-	}
-	
+
+	cemu_assert_debug(LatteGPUState.contextNew.PA_CL_CLIP_CNTL.get_ZCLIP_NEAR_DISABLE() == LatteGPUState.contextNew.PA_CL_CLIP_CNTL.get_ZCLIP_FAR_DISABLE());
 	// ... resto del código ...
-}
+	}
 	else
 		rasterizer.depthBiasEnable = VK_FALSE;
 
@@ -873,13 +864,14 @@ bool PipelineCompiler::InitFromCurrentGPUState(PipelineInfo* pipelineInfo, const
 	m_requestRobustBufferAccess = requireRobustBufferAccess;
 
 	// if required generate RECT emulation geometry shader
-	if (!vkRenderer->m_featureControl.deviceExtensions.nv_fill_rectangle && isPrimitiveRect)
-	{
-		cemu_assert(m_vkGeometryShader == nullptr); // todo - handle cases where the game already provides a GS
-		m_rectEmulationGS = rectsEmulationGS_generate(pipelineInfo->vertexShader, latteRegister);
-		pipelineInfo->rectEmulationGS = m_rectEmulationGS;
-	}
-
+	// if required generate RECT emulation geometry shader
+bool isPowerVR = vkRenderer->GetVendorID() == 0x5143;
+if ((!vkRenderer->m_featureControl.deviceExtensions.nv_fill_rectangle || isPowerVR) && isPrimitiveRect)
+{
+	cemu_assert(m_vkGeometryShader == nullptr); // todo - handle cases where the game already provides a GS
+	m_rectEmulationGS = rectsEmulationGS_generate(pipelineInfo->vertexShader, latteRegister);
+	pipelineInfo->rectEmulationGS = m_rectEmulationGS;
+}
 	// ##########################################################################################################################################
 
 	pipelineInfo->primitiveMode = primitiveMode;
@@ -931,17 +923,10 @@ bool PipelineCompiler::Compile(bool forceCompile, bool isRenderThread, bool show
 	VulkanRenderer* vkRenderer = VulkanRenderer::GetInstance();
 	
 	// PowerVR compatibility check
-	bool isPowerVR = vkRenderer->GetVendorID() == 0x5143;
-if (isPowerVR)
+	if (!forceCompile)
 {
-    cemuLog_logDebug(LogType::Force, "PowerVR GPU detected - Applying compatibility tweaks");
-}
-
-// NO excluyas PowerVR de pipeline_creation_cache_control
-if (!vkRenderer->m_featureControl.deviceExtensions.pipeline_creation_cache_control)
-{
-    // handle cuando NO hay caché disponible
-}
+	// fail early if some shader stages are not compiled
+	// ...
 	if (!forceCompile)
 	{
 		// fail early if some shader stages are not compiled
