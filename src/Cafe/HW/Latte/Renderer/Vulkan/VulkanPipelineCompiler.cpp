@@ -946,10 +946,6 @@ bool PipelineCompiler::Compile(bool forceCompile, bool isRenderThread, bool show
 	
 	// PowerVR compatibility check
 	if (!forceCompile)
-{
-	// fail early if some shader stages are not compiled
-	// ...
-	if (!forceCompile)
 	{
 		// fail early if some shader stages are not compiled
 		if (m_vkVertexShader && m_vkVertexShader->IsCompiled() == false)
