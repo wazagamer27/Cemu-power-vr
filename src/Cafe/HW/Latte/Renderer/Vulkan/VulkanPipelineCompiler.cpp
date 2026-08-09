@@ -607,7 +607,7 @@ void PipelineCompiler::InitRasterizerState(const LatteContextRegister& latteRegi
 	multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
 	multisampling.sampleShadingEnable = VK_FALSE;
 	multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-} // <- CIERRE FINAL DE LA FUNCIÓN
+}  
 
 bool _IsVkIntegerFormat(VkFormat fmt)
 {
