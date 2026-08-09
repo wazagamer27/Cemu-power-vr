@@ -548,17 +548,40 @@ void PipelineCompiler::InitRasterizerState(const LatteContextRegister& latteRegi
 	uint32 cullBack = polygonControlReg.get_CULL_BACK();
 	uint32 polyOffsetFrontEnable = polygonControlReg.get_OFFSET_FRONT_ENABLED();
 
-	// AÑADE ESTAS 2 LÍNEAS AQUÍ:
 	bool isPowerVR = vkRenderer->GetVendorID() == 0x5143;
 
 	cemu_assert_debug(LatteGPUState.contextNew.PA_CL_CLIP_CNTL.get_ZCLIP_NEAR_DISABLE() == LatteGPUState.contextNew.PA_CL_CLIP_CNTL.get_ZCLIP_FAR_DISABLE());
-	// ... resto del código ...
+	bool zClipEnable = LatteGPUState.contextNew.PA_CL_CLIP_CNTL.get_ZCLIP_FAR_DISABLE() == false;
+
+	rasterizerExt.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_DEPTH_CLIP_STATE_CREATE_INFO_EXT;
+	rasterizerExt.depthClipEnable = zClipEnable;
+	rasterizerExt.flags = 0;
+
+	rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+	rasterizer.rasterizerDiscardEnable = LatteGPUState.contextNew.PA_CL_CLIP_CNTL.get_DX_RASTERIZATION_KILL();
+	rasterizer.pNext = VulkanRenderer::GetInstance()->m_featureControl.deviceExtensions.depth_clip_enable ? &rasterizerExt : nullptr;
+	
+	if (!LatteGPUState.contextNew.PA_CL_VTE_CNTL.get_VPORT_X_OFFSET_ENA())
+		rasterizer.rasterizerDiscardEnable = false;
+
+	rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
+	if (vkRenderer->m_featureControl.deviceExtensions.nv_fill_rectangle && !isPowerVR && isPrimitiveRect)
+		rasterizer.polygonMode = VK_POLYGON_MODE_FILL_RECTANGLE_NV;
+	
+	rasterizer.depthClampEnable = VK_TRUE;
+	rasterizer.lineWidth = 1.0f;
+
+	usesDepthBias = polyOffsetFrontEnable;
+	if (polyOffsetFrontEnable)
+	{
+		rasterizer.depthBiasEnable = VK_TRUE;
+		rasterizer.depthBiasConstantFactor = 0.0f;
+		rasterizer.depthBiasSlopeFactor = 0.0f;
+		rasterizer.depthBiasClamp = 0.0f;
 	}
 	else
 		rasterizer.depthBiasEnable = VK_FALSE;
 
-	// todo - how does culling behave with rects?
-	// right now we just assume that their winding is always CW
 	if (isPrimitiveRect)
 	{
 		if (frontFace == Latte::LATTE_PA_SU_SC_MODE_CNTL::E_FRONTFACE::CW)
@@ -581,11 +604,10 @@ void PipelineCompiler::InitRasterizerState(const LatteContextRegister& latteRegi
 	else
 		rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
 
-	// multisampling
 	multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
 	multisampling.sampleShadingEnable = VK_FALSE;
 	multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-}
+} // <- CIERRE FINAL DE LA FUNCIÓN
 
 bool _IsVkIntegerFormat(VkFormat fmt)
 {
