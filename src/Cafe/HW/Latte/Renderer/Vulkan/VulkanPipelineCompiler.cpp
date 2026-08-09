@@ -945,8 +945,6 @@ bool PipelineCompiler::Compile(bool forceCompile, bool isRenderThread, bool show
 	VulkanRenderer* vkRenderer = VulkanRenderer::GetInstance();
 	
 	// PowerVR compatibility check
-	if (!forceCompile)
-	{
 		// fail early if some shader stages are not compiled
 		if (m_vkVertexShader && m_vkVertexShader->IsCompiled() == false)
 			return false;
