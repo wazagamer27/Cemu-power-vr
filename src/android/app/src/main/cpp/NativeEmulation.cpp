@@ -241,13 +241,13 @@ Java_info_cemu_cemu_nativeinterface_NativeEmulation_initializeRenderer(JNIEnv* e
 {
 	static std::unique_ptr<NativeEmulation::TestSurface> testSurface;
 
-	InitializeGlobalVulkan();
+	InitializeGlobalOpenGL();
 	JNIUtils::HandleNativeException(env, [&]() {
 		testSurface = std::make_unique<NativeEmulation::TestSurface>();
 
 		WindowSystem::GetWindowInfo().window_main.surface = testSurface->getWindow();
 
-		g_renderer = std::make_unique<VulkanRenderer>();
+		g_renderer = std::make_unique<OpenGLRenderer>();
 	});
 }
 
